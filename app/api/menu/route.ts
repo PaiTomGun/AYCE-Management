@@ -8,8 +8,20 @@ export async function GET(request: Request) {
     
     const menuItems = await getMenuItems(tierId);
     
+    // Get tier information for each menu item
+    const itemsWithTiers = await Promise.all(menuItems.map(async (item: any) => {
+      const tiers = await query(
+        `SELECT t.id, t.code, t.display_name 
+         FROM tiers t 
+         JOIN menu_item_tiers mit ON t.id = mit.tier_id 
+         WHERE mit.item_id = $1 AND t.archived_at IS NULL`,
+        [item.id]
+      );
+      return { ...item, tiers };
+    }));
+    
     // Group by category
-    const grouped = menuItems.reduce((acc: any, item: any) => {
+    const grouped = itemsWithTiers.reduce((acc: any, item: any) => {
       const category = item.category_name || 'อื่นๆ';
       if (!acc[category]) {
         acc[category] = [];
@@ -30,7 +42,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { name, description, category, imageBase64, isAvailable } = await request.json();
+    const { name, description, category, imageBase64, isAvailable, tierIds } = await request.json();
     
     // Get or create category
     let categoryId = await query(
@@ -54,6 +66,17 @@ export async function POST(request: Request) {
       [itemId, name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), new Date()]
     );
     
+    // Insert tier associations
+    if (tierIds && Array.isArray(tierIds) && tierIds.length > 0) {
+      for (const tierId of tierIds) {
+        const mitId = generateId();
+        await query(
+          'INSERT INTO menu_item_tiers (id, item_id, tier_id) VALUES ($1, $2, $3)',
+          [mitId, itemId, tierId]
+        );
+      }
+    }
+    
     return NextResponse.json({ success: true, itemId });
   } catch (error) {
     console.error('Menu POST error:', error);
@@ -66,7 +89,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { itemId, name, description, category, imageBase64, isAvailable } = await request.json();
+    const { itemId, name, description, category, imageBase64, isAvailable, tierIds } = await request.json();
     
     // Get or create category
     let categoryId = await query(
@@ -89,6 +112,19 @@ export async function PUT(request: Request) {
        WHERE id = $7`,
       [name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), itemId]
     );
+    
+    // Update tier associations - delete existing and insert new
+    await query('DELETE FROM menu_item_tiers WHERE item_id = $1', [itemId]);
+    
+    if (tierIds && Array.isArray(tierIds) && tierIds.length > 0) {
+      for (const tierId of tierIds) {
+        const mitId = generateId();
+        await query(
+          'INSERT INTO menu_item_tiers (id, item_id, tier_id) VALUES ($1, $2, $3)',
+          [mitId, itemId, tierId]
+        );
+      }
+    }
     
     return NextResponse.json({ success: true });
   } catch (error) {

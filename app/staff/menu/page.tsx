@@ -11,6 +11,13 @@ interface MenuItem {
   category_name: string;
   is_available: boolean;
   image_base64?: string;
+  tiers?: Tier[];
+}
+
+interface Tier {
+  id: string;
+  code: string;
+  display_name: string;
 }
 
 interface Category {
@@ -22,6 +29,7 @@ interface Category {
 export default function MenuManagementPage() {
   const [menu, setMenu] = useState<any>({});
   const [categories, setCategories] = useState<Category[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -31,12 +39,14 @@ export default function MenuManagementPage() {
   const [itemCategory, setItemCategory] = useState('');
   const [itemImage, setItemImage] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
+  const [selectedTierIds, setSelectedTierIds] = useState<string[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     checkAuth();
     fetchMenu();
     fetchCategories();
+    fetchTiers();
   }, []);
 
   const checkAuth = async () => {
@@ -63,6 +73,16 @@ export default function MenuManagementPage() {
     }
   };
 
+  const fetchTiers = async () => {
+    try {
+      const response = await fetch('/api/tiers?includeInactive=true');
+      const data = await response.json();
+      setTiers(data);
+    } catch (error) {
+      console.error('Error fetching tiers:', error);
+    }
+  };
+
   const fetchMenu = async () => {
     try {
       const response = await fetch('/api/menu');
@@ -82,6 +102,7 @@ export default function MenuManagementPage() {
     setItemCategory('');
     setItemImage('');
     setIsAvailable(true);
+    setSelectedTierIds([]);
     setShowModal(true);
   };
 
@@ -92,6 +113,7 @@ export default function MenuManagementPage() {
     setItemCategory(item.category_name);
     setItemImage(item.image_base64 || '');
     setIsAvailable(item.is_available);
+    setSelectedTierIds(item.tiers?.map(t => t.id) || []);
     setShowModal(true);
   };
 
@@ -125,6 +147,7 @@ export default function MenuManagementPage() {
           category: item.category_name,
           imageBase64: item.image_base64,
           isAvailable: !item.is_available,
+          tierIds: item.tiers?.map(t => t.id) || [],
         }),
       });
       
@@ -174,6 +197,7 @@ export default function MenuManagementPage() {
           category: itemCategory,
           imageBase64: itemImage,
           isAvailable,
+          tierIds: selectedTierIds,
         }),
       });
       
@@ -184,6 +208,14 @@ export default function MenuManagementPage() {
     } catch (error) {
       console.error('Error saving item:', error);
     }
+  };
+
+  const toggleTierSelection = (tierId: string) => {
+    setSelectedTierIds(prev => 
+      prev.includes(tierId) 
+        ? prev.filter(id => id !== tierId)
+        : [...prev, tierId]
+    );
   };
 
   if (loading) {
@@ -230,6 +262,9 @@ export default function MenuManagementPage() {
                           Description
                         </th>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
+                          Tiers
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
                           Status
                         </th>
                         <th className="px-6 py-3 text-center text-sm font-semibold text-gray-600">
@@ -245,6 +280,22 @@ export default function MenuManagementPage() {
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-600">
                             {item.description || '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1">
+                              {item.tiers && item.tiers.length > 0 ? (
+                                item.tiers.map((tier) => (
+                                  <span
+                                    key={tier.id}
+                                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
+                                  >
+                                    {tier.code}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-xs">No tiers</span>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4">
                             <button
@@ -362,6 +413,30 @@ export default function MenuManagementPage() {
                   className="mt-2 w-32 h-32 object-cover rounded-lg"
                 />
               )}
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Tiers</label>
+              <div className="border rounded-lg p-3 max-h-40 overflow-y-auto">
+                {tiers.length > 0 ? (
+                  tiers.map((tier) => (
+                    <label key={tier.id} className="flex items-center gap-2 py-1 hover:bg-gray-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedTierIds.includes(tier.id)}
+                        onChange={() => toggleTierSelection(tier.id)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm">{tier.display_name} ({tier.code})</span>
+                    </label>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-500">No tiers available</div>
+                )}
+              </div>
+              <div className="mt-1 text-xs text-gray-500">
+                Select which tiers can order this item
+              </div>
             </div>
 
             <div className="mb-6">
