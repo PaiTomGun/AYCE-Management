@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Sidebar from '@/app/components/Sidebar';
 
 interface Table {
   id: string;
@@ -15,6 +15,7 @@ interface Table {
   tier_name?: string;
   tier_price?: number;
   layout?: string;
+  session_duration_minutes?: number;
 }
 
 interface Tier {
@@ -27,6 +28,7 @@ interface Tier {
 export default function TablesPage() {
   const [tables, setTables] = useState<Table[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -54,6 +56,8 @@ export default function TablesPage() {
       const data = await response.json();
       if (!data.user) {
         router.push('/staff/login');
+      } else {
+        setUser(data.user);
       }
     } catch (error) {
       router.push('/staff/login');
@@ -168,11 +172,17 @@ export default function TablesPage() {
     }
   };
 
-  const getElapsedTime = (startedAt: string) => {
+  const getRemainingTime = (startedAt: string, durationMinutes: number) => {
     const start = new Date(startedAt);
     const now = new Date();
-    const diff = Math.floor((now.getTime() - start.getTime()) / 1000 / 60);
-    return `${diff} min`;
+    const elapsedMinutes = Math.floor((now.getTime() - start.getTime()) / 1000 / 60);
+    const remaining = durationMinutes - elapsedMinutes;
+    
+    if (remaining <= 0) {
+      return '0 min (Expired)';
+    }
+    
+    return `${remaining} min`;
   };
 
   const parseLayout = (layout: string | undefined | null) => {
@@ -195,63 +205,7 @@ export default function TablesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-900 text-white min-h-screen p-6">
-          <div className="mb-8">
-            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-2">
-              <span className="text-xl font-bold">👤</span>
-            </div>
-            <p className="text-sm text-gray-400">ผู้ประสานงานและผู้ใช้งาน</p>
-          </div>
-
-          <nav className="space-y-2">
-            <Link
-              href="/staff/dashboard"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/staff/tables"
-              className="block px-4 py-3 bg-red-500 rounded-lg font-medium"
-            >
-              Table Layout
-            </Link>
-            <Link
-              href="/staff/menu"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Menu Management
-            </Link>
-            <Link
-              href="/staff/tiers"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Tier Management
-            </Link>
-            <Link
-              href="/staff/accounts"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              User Management
-            </Link>
-            <Link
-              href="/staff/analytics"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Analytics
-            </Link>
-            <button
-              onClick={async () => {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                router.push('/staff/login');
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-lg text-red-400 mt-4"
-            >
-              🚪 Logout
-            </button>
-          </nav>
-        </div>
+        <Sidebar role={user?.role} />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -331,7 +285,8 @@ export default function TablesPage() {
                           </div>
                           <div className="text-gray-700">
                             <strong>Remaining Time:</strong>{' '}
-                            {table.started_at && getElapsedTime(table.started_at)}
+                            {table.started_at && table.session_duration_minutes && 
+                              getRemainingTime(table.started_at, table.session_duration_minutes)}
                           </div>
                         </div>
                       )}

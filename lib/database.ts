@@ -49,6 +49,7 @@ export async function getTablesWithStatus() {
       END as status,
       s.id as session_id,
       s.started_at,
+      s.session_duration_minutes,
       (SELECT COUNT(*) FROM session_customers WHERE session_id = s.id) as customer_count,
       t.display_name as tier_name,
       t.price_per_person_baht as tier_price

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Sidebar from '@/app/components/Sidebar';
 import { User } from '@/lib/types';
 
 interface Account {
@@ -138,48 +138,7 @@ export default function AccountsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-900 text-white min-h-screen p-6">
-          <div className="mb-8">
-            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-2">
-              <span className="text-xl font-bold">👤</span>
-            </div>
-            <p className="text-sm text-gray-400">Administrator</p>
-          </div>
-
-          <nav className="space-y-2">
-            <Link
-              href="/staff/dashboard"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/staff/tables"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Table Layout
-            </Link>
-            <Link
-              href="/staff/menu"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Menu Management
-            </Link>
-            <Link
-              href="/staff/analytics"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Analytics
-            </Link>
-            <Link
-              href="/staff/accounts"
-              className="block px-4 py-3 bg-red-500 rounded-lg font-medium"
-            >
-              Account Management
-            </Link>
-          </nav>
-        </div>
+        <Sidebar role={user?.role} />
 
         {/* Main Content */}
         <div className="flex-1">

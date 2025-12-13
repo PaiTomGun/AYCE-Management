@@ -20,11 +20,12 @@ export default function Sidebar({ role = 'staff' }: SidebarProps) {
   const navItems: NavItem[] = [
     { href: '/staff/dashboard', label: 'Dashboard' },
     { href: '/staff/tables', label: 'Table Layout' },
-    { href: '/staff/menu', label: 'Menu Management' },
-    { href: '/staff/analytics', label: 'Analytics' },
   ];
 
   if (role === 'admin') {
+    navItems.push({ href: '/staff/menu', label: 'Menu Management' });
+    navItems.push({ href: '/staff/tiers', label: 'Tier Management' });
+    navItems.push({ href: '/staff/analytics', label: 'Analytics' });
     navItems.push({ href: '/staff/accounts', label: 'Account Management' });
   }
 

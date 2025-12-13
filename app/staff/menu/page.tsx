@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Sidebar from '@/app/components/Sidebar';
 
 interface MenuItem {
   id: string;
@@ -13,8 +13,16 @@ interface MenuItem {
   image_base64?: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  position: number;
+}
+
 export default function MenuManagementPage() {
   const [menu, setMenu] = useState<any>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -28,6 +36,7 @@ export default function MenuManagementPage() {
   useEffect(() => {
     checkAuth();
     fetchMenu();
+    fetchCategories();
   }, []);
 
   const checkAuth = async () => {
@@ -36,9 +45,21 @@ export default function MenuManagementPage() {
       const data = await response.json();
       if (!data.user) {
         router.push('/staff/login');
+      } else {
+        setUser(data.user);
       }
     } catch (error) {
       router.push('/staff/login');
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -153,63 +174,7 @@ export default function MenuManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-gray-900 text-white min-h-screen p-6">
-          <div className="mb-8">
-            <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mb-2">
-              <span className="text-xl font-bold">👤</span>
-            </div>
-            <p className="text-sm text-gray-400">ผู้ประสานงานและผู้ใช้งาน</p>
-          </div>
-
-          <nav className="space-y-2">
-            <Link
-              href="/staff/dashboard"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/staff/tables"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Table Layout
-            </Link>
-            <Link
-              href="/staff/menu"
-              className="block px-4 py-3 bg-red-500 rounded-lg font-medium"
-            >
-              Menu Management
-            </Link>
-            <Link
-              href="/staff/tiers"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Tier Management
-            </Link>
-            <Link
-              href="/staff/accounts"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              User Management
-            </Link>
-            <Link
-              href="/staff/analytics"
-              className="block px-4 py-3 hover:bg-gray-800 rounded-lg"
-            >
-              Analytics
-            </Link>
-            <button
-              onClick={async () => {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                router.push('/staff/login');
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-gray-800 rounded-lg text-red-400 mt-4"
-            >
-              🚪 Logout
-            </button>
-          </nav>
-        </div>
+        <Sidebar role={user?.role} />
 
         {/* Main Content */}
         <div className="flex-1">
@@ -336,10 +301,11 @@ export default function MenuManagementPage() {
                 className="w-full px-4 py-2 border rounded-lg"
               >
                 <option value="">Select category</option>
-                <option value="เนื้อสัตว์">เนื้อสัตว์</option>
-                <option value="ของทะเล">ของทะเล</option>
-                <option value="ผัก">ผัก</option>
-                <option value="อื่นๆ">อื่นๆ</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
             </div>
 
