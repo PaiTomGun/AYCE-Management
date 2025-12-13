@@ -15,11 +15,18 @@ DROP TABLE IF EXISTS "session_customers" CASCADE;
 DROP TABLE IF EXISTS "sessions" CASCADE;
 DROP TABLE IF EXISTS "tiers" CASCADE;
 DROP TABLE IF EXISTS "restaurant_tables" CASCADE;
+DROP TABLE IF EXISTS "accounts" CASCADE;
+DROP TYPE IF EXISTS "user_role" CASCADE;
 DROP TYPE IF EXISTS "session_status" CASCADE;
 
 -- ============================================
 -- CUSTOM TYPES
 -- ============================================
+
+CREATE TYPE "user_role" AS ENUM (
+  'staff',
+  'admin'
+);
 
 CREATE TYPE "session_status" AS ENUM (
   'active',
@@ -30,6 +37,18 @@ CREATE TYPE "session_status" AS ENUM (
 -- ============================================
 -- TABLES
 -- ============================================
+
+-- Accounts (Staff and Admin Users)
+CREATE TABLE "accounts" (
+  "id" uuid PRIMARY KEY,
+  "username" text UNIQUE NOT NULL,
+  "password_hash" text NOT NULL,
+  "role" user_role NOT NULL,
+  "is_active" boolean DEFAULT true,
+  "created_at" timestamptz DEFAULT NOW(),
+  "updated_at" timestamptz DEFAULT NOW(),
+  "created_by" uuid REFERENCES "accounts" ("id")
+);
 
 -- Restaurant Tables
 CREATE TABLE "restaurant_tables" (

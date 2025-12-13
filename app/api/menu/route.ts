@@ -1,0 +1,122 @@
+import { NextResponse } from 'next/server';
+import { getMenuItems, query, generateId } from '@/lib/database';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const tierId = searchParams.get('tierId') || undefined;
+    
+    const menuItems = await getMenuItems(tierId);
+    
+    // Group by category
+    const grouped = menuItems.reduce((acc: any, item: any) => {
+      const category = item.category_name || 'อื่นๆ';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    }, {});
+    
+    return NextResponse.json(grouped);
+  } catch (error) {
+    console.error('Menu error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { name, description, category, imageBase64, isAvailable } = await request.json();
+    
+    // Get or create category
+    let categoryId = await query(
+      'SELECT id FROM menu_categories WHERE name = $1',
+      [category]
+    );
+    
+    if (categoryId.length === 0) {
+      const newCatId = generateId();
+      await query(
+        'INSERT INTO menu_categories (id, name, position, created_at) VALUES ($1, $2, $3, $4)',
+        [newCatId, category, 99, new Date()]
+      );
+      categoryId = [{ id: newCatId }];
+    }
+    
+    const itemId = generateId();
+    await query(
+      `INSERT INTO menu_items (id, name, description, category_id, image_base64, is_available, is_deleted, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8)`,
+      [itemId, name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), new Date()]
+    );
+    
+    return NextResponse.json({ success: true, itemId });
+  } catch (error) {
+    console.error('Menu POST error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { itemId, name, description, category, imageBase64, isAvailable } = await request.json();
+    
+    // Get or create category
+    let categoryId = await query(
+      'SELECT id FROM menu_categories WHERE name = $1',
+      [category]
+    );
+    
+    if (categoryId.length === 0) {
+      const newCatId = generateId();
+      await query(
+        'INSERT INTO menu_categories (id, name, position, created_at) VALUES ($1, $2, $3, $4)',
+        [newCatId, category, 99, new Date()]
+      );
+      categoryId = [{ id: newCatId }];
+    }
+    
+    await query(
+      `UPDATE menu_items 
+       SET name = $1, description = $2, category_id = $3, image_base64 = $4, is_available = $5, updated_at = $6
+       WHERE id = $7`,
+      [name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), itemId]
+    );
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Menu PUT error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { itemId } = await request.json();
+    
+    await query(
+      'UPDATE menu_items SET is_deleted = true, updated_at = $1 WHERE id = $2',
+      [new Date(), itemId]
+    );
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Menu DELETE error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export const dynamic = 'force-dynamic';
