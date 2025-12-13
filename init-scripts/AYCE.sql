@@ -120,6 +120,7 @@ CREATE TABLE "menu_items" (
   "category_id" uuid REFERENCES "menu_categories" ("id"),
   "name" text NOT NULL,
   "description" text,
+  "image_base64" text,
   "is_available" boolean DEFAULT true,
   "is_deleted" boolean DEFAULT false,
   "stock" int,

@@ -100,10 +100,15 @@ export async function getDashboardStats() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
+  // Get sales today from both payments (active) and session_logs (completed)
   const salesQuery = `
-    SELECT COALESCE(SUM(amount_baht), 0) as sales_today
+    SELECT COALESCE(SUM(total_amount_baht), 0) as sales_today
+    FROM session_logs
+    WHERE DATE(ended_at) = DATE($1)
+    UNION ALL
+    SELECT COALESCE(SUM(amount_baht), 0)
     FROM payments
-    WHERE processed_at >= $1
+    WHERE DATE(processed_at) = DATE($1)
   `;
   
   const customerQuery = `
@@ -127,15 +132,18 @@ export async function getDashboardStats() {
     )
   `;
   
-  const [sales, customers, active, available] = await Promise.all([
-    queryOne(salesQuery, [today]),
+  const [salesResults, customers, active, available] = await Promise.all([
+    query(salesQuery, [today]),
     queryOne(customerQuery),
     queryOne(activeTableQuery),
     queryOne(availableTableQuery),
   ]);
   
+  // Sum up sales from both queries
+  const totalSales = salesResults.reduce((sum, row: any) => sum + Number(row.sales_today || 0), 0);
+  
   return {
-    sales_today: Number(sales?.sales_today || 0),
+    sales_today: totalSales,
     customer_now: Number(customers?.customer_now || 0),
     active_table: Number(active?.active_table || 0),
     available_table: Number(available?.available_table || 0),

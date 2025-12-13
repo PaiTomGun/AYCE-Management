@@ -181,7 +181,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* Charts */}
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6 mb-6">
                   {/* Hourly Breakdown Chart */}
                   <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="text-xl font-bold mb-4">Peak Hours</h2>
@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
                             <div className="flex justify-between mb-1">
                               <span className="font-medium">{tier}</span>
                               <span className="text-gray-600">
-                                {data.count} orders · {data.revenue.toLocaleString()} Baht
+                                {data.count} sessions · {data.revenue.toLocaleString()} Baht
                               </span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -257,6 +257,56 @@ export default function AnalyticsPage() {
                             </div>
                           </div>
                         )
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Methods & Top Items */}
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Payment Methods */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-bold mb-4">Payment Methods</h2>
+                    <div className="space-y-3">
+                      {Object.entries(analytics.paymentMethodBreakdown || {}).map(
+                        ([method, data]: [string, any]) => {
+                          const methodLabels: Record<string, string> = {
+                            cash: '💵 Cash',
+                            credit_card: '💳 Credit Card',
+                            thai_qr: '📱 Thai QR',
+                          };
+                          return (
+                            <div key={method} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                              <span className="font-medium">{methodLabels[method] || method}</span>
+                              <div className="text-right">
+                                <div className="font-bold">{data.count} transactions</div>
+                                <div className="text-sm text-gray-600">{data.revenue.toLocaleString()} Baht</div>
+                              </div>
+                            </div>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Top Menu Items */}
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="text-xl font-bold mb-4">Top 10 Menu Items</h2>
+                    <div className="space-y-2">
+                      {(analytics.topMenuItems || []).map((item: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center text-sm">
+                          <div>
+                            <span className="font-medium">{index + 1}. {item.item_name}</span>
+                            <span className="text-gray-500 text-xs ml-2">({item.category_name})</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-red-600">{item.total_quantity}x</div>
+                            <div className="text-xs text-gray-500">{item.order_count} orders</div>
+                          </div>
+                        </div>
+                      ))}
+                      {(!analytics.topMenuItems || analytics.topMenuItems.length === 0) && (
+                        <div className="text-center text-gray-500 py-4">No menu items data</div>
                       )}
                     </div>
                   </div>

@@ -13,19 +13,41 @@ function hashPassword(password: string): string {
 export async function authenticateUser(username: string, password: string): Promise<User | null> {
   try {
     const passwordHash = hashPassword(password);
+    console.log('Attempting authentication for:', username);
+    
     const account = await queryOne<any>(
-      'SELECT id, username, role FROM accounts WHERE username = $1 AND password_hash = $2 AND is_active = true',
-      [username, passwordHash]
+      'SELECT id, username, role, is_active FROM accounts WHERE username = $1',
+      [username]
     );
     
-    if (account) {
-      return {
-        id: account.id,
-        username: account.username,
-        role: account.role
-      };
+    if (!account) {
+      console.log('Account not found for username:', username);
+      return null;
     }
-    return null;
+
+    // Check if account is active
+    if (!account.is_active) {
+      console.log('Account is inactive:', username);
+      return null;
+    }
+
+    // Verify password hash
+    const storedHash = await queryOne<any>(
+      'SELECT password_hash FROM accounts WHERE id = $1',
+      [account.id]
+    );
+
+    if (!storedHash || storedHash.password_hash !== passwordHash) {
+      console.log('Password mismatch for username:', username);
+      return null;
+    }
+    
+    console.log('Authentication successful for:', username);
+    return {
+      id: account.id,
+      username: account.username,
+      role: account.role
+    };
   } catch (error) {
     console.error('Authentication error:', error);
     return null;

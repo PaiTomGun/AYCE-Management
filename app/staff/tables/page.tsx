@@ -31,6 +31,7 @@ export default function TablesPage() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [customerCount, setCustomerCount] = useState(1);
   const [selectedTier, setSelectedTier] = useState('');
   const [sessionDuration, setSessionDuration] = useState(90);
@@ -139,7 +140,7 @@ export default function TablesPage() {
   };
 
   const handleCheckout = async () => {
-    if (!selectedTable?.session_id) return;
+    if (!selectedTable?.session_id || !paymentMethod) return;
 
     try {
       const response = await fetch('/api/tables/checkout', {
@@ -147,15 +148,23 @@ export default function TablesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sessionId: selectedTable.session_id,
+          paymentMethod: paymentMethod,
         }),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        alert(`Checkout successful! Total: ${data.totalAmount} Baht`);
         setShowCheckoutModal(false);
+        setPaymentMethod('cash');
         fetchData();
+      } else {
+        const error = await response.json();
+        alert(`Checkout failed: ${error.error}`);
       }
     } catch (error) {
       console.error('Error checking out:', error);
+      alert('Error processing checkout');
     }
   };
 
@@ -468,7 +477,7 @@ export default function TablesPage() {
       {showCheckoutModal && selectedTable && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Checkout Table {selectedTable.table_code}?</h2>
+            <h2 className="text-2xl font-bold mb-4">Checkout Table {selectedTable.table_code}</h2>
             
             <div className="mb-6 space-y-2 text-sm">
               <div className="flex justify-between">
@@ -480,6 +489,10 @@ export default function TablesPage() {
                 <span className="font-medium">{selectedTable.tier_name}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-gray-600">Price per person:</span>
+                <span className="font-medium">{selectedTable.tier_price} Baht</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-600">Started:</span>
                 <span className="font-medium">
                   {selectedTable.started_at && new Date(selectedTable.started_at).toLocaleTimeString('th-TH', {
@@ -488,11 +501,59 @@ export default function TablesPage() {
                   })}
                 </span>
               </div>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="text-gray-900 font-semibold">Total Amount:</span>
+                <span className="font-bold text-lg text-red-600">
+                  {((selectedTable.customer_count || 0) * (selectedTable.tier_price || 0)).toLocaleString()} Baht
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Payment Method</label>
+              <div className="space-y-2">
+                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="cash"
+                    checked={paymentMethod === 'cash'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-4 h-4 text-red-500"
+                  />
+                  <span className="ml-3 text-sm font-medium">💵 Cash</span>
+                </label>
+                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="credit_card"
+                    checked={paymentMethod === 'credit_card'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-4 h-4 text-red-500"
+                  />
+                  <span className="ml-3 text-sm font-medium">💳 Credit Card</span>
+                </label>
+                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="thai_qr"
+                    checked={paymentMethod === 'thai_qr'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-4 h-4 text-red-500"
+                  />
+                  <span className="ml-3 text-sm font-medium">📱 Thai Payment QR</span>
+                </label>
+              </div>
             </div>
             
             <div className="flex gap-3">
               <button
-                onClick={() => setShowCheckoutModal(false)}
+                onClick={() => {
+                  setShowCheckoutModal(false);
+                  setPaymentMethod('cash');
+                }}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
@@ -501,7 +562,7 @@ export default function TablesPage() {
                 onClick={handleCheckout}
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
-                Checkout
+                Process Payment
               </button>
             </div>
           </div>
