@@ -25,4 +25,4 @@ UPDATE sessions SET session_duration_minutes = 90 WHERE session_duration_minutes
 
 -- Create index for better performance
 CREATE INDEX IF NOT EXISTS idx_sessions_duration ON sessions(session_duration_minutes);
-CREATE INDEX IF NOT EXISTS idx_menu_items_image ON menu_items(image_base64) WHERE image_base64 IS NOT NULL;
+-- Note: Index on image_base64 removed because base64 images exceed PostgreSQL's 8191 byte index limit

@@ -59,11 +59,14 @@ export async function POST(request: Request) {
       categoryId = [{ id: newCatId }];
     }
     
+    // Convert empty string to null for image_base64
+    const imageValue = imageBase64 && imageBase64.trim() !== '' ? imageBase64 : null;
+    
     const itemId = generateId();
     await query(
       `INSERT INTO menu_items (id, name, description, category_id, image_base64, is_available, is_deleted, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8)`,
-      [itemId, name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), new Date()]
+      [itemId, name, description, categoryId[0].id, imageValue, isAvailable, new Date(), new Date()]
     );
     
     // Insert tier associations
@@ -106,11 +109,14 @@ export async function PUT(request: Request) {
       categoryId = [{ id: newCatId }];
     }
     
+    // Convert empty string to null for image_base64
+    const imageValue = imageBase64 && imageBase64.trim() !== '' ? imageBase64 : null;
+    
     await query(
       `UPDATE menu_items 
        SET name = $1, description = $2, category_id = $3, image_base64 = $4, is_available = $5, updated_at = $6
        WHERE id = $7`,
-      [name, description, categoryId[0].id, imageBase64, isAvailable, new Date(), itemId]
+      [name, description, categoryId[0].id, imageValue, isAvailable, new Date(), itemId]
     );
     
     // Update tier associations - delete existing and insert new
