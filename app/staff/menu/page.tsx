@@ -256,6 +256,9 @@ export default function MenuManagementPage() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
+                          Image
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
                           Name
                         </th>
                         <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
@@ -275,6 +278,21 @@ export default function MenuManagementPage() {
                     <tbody className="divide-y divide-gray-200">
                       {(items as MenuItem[]).map((item) => (
                         <tr key={item.id} className={`hover:bg-gray-50 ${!item.is_available ? 'opacity-50' : ''}`}>
+                          <td className="px-6 py-4">
+                            {item.image_base64 ? (
+                              <img 
+                                src={item.image_base64} 
+                                alt={item.name}
+                                className="w-16 h-16 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4">
                             <span className={!item.is_available ? 'text-gray-500' : ''}>{item.name}</span>
                           </td>
