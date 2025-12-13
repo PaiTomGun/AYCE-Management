@@ -101,6 +101,29 @@ export async function getAllAccounts() {
   }
 }
 
+export async function updateAccount(accountId: string, username: string, role: 'staff' | 'admin') {
+  try {
+    // Check if username already exists (excluding current account)
+    const existing = await queryOne(
+      'SELECT id FROM accounts WHERE username = $1 AND id != $2',
+      [username, accountId]
+    );
+    
+    if (existing) {
+      return { success: false, error: 'Username already exists' };
+    }
+    
+    await query(
+      'UPDATE accounts SET username = $1, role = $2, updated_at = NOW() WHERE id = $3',
+      [username, role, accountId]
+    );
+    return { success: true };
+  } catch (error) {
+    console.error('Update account error:', error);
+    return { success: false, error: 'Failed to update account' };
+  }
+}
+
 export async function updateAccountStatus(accountId: string, isActive: boolean) {
   try {
     await query(

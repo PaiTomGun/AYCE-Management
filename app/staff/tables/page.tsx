@@ -41,6 +41,10 @@ export default function TablesPage() {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [generatedSessionId, setGeneratedSessionId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [newTableSeats, setNewTableSeats] = useState(2);
+  const [selectedTableForDelete, setSelectedTableForDelete] = useState<Table | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -194,6 +198,81 @@ export default function TablesPage() {
     }
   };
 
+  const handleAddTable = () => {
+    setNewTableSeats(2);
+    setShowAddModal(true);
+  };
+
+  const confirmAddTable = async () => {
+    if (newTableSeats < 1 || newTableSeats > 20) {
+      alert('Please enter a valid number of seats (1-20)');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tables', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seats: newTableSeats,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Table added successfully: ${data.tableCode}`);
+        setShowAddModal(false);
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(`Failed to add table: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error adding table:', error);
+      alert('Error adding table');
+    }
+  };
+
+  const handleDeleteTable = () => {
+    setShowDeleteModal(true);
+    setSelectedTableForDelete(null);
+  };
+
+  const confirmDeleteTable = async () => {
+    if (!selectedTableForDelete) {
+      alert('Please select a table to delete');
+      return;
+    }
+
+    if (selectedTableForDelete.status === 'occupied') {
+      alert('Cannot delete an occupied table');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tables', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableId: selectedTableForDelete.id,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Table deleted successfully!');
+        setShowDeleteModal(false);
+        setSelectedTableForDelete(null);
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(`Failed to delete table: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting table:', error);
+      alert('Error deleting table');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -217,12 +296,22 @@ export default function TablesPage() {
                 Date: {new Date().toLocaleDateString('th-TH')} Time:{' '}
                 {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
               </span>
-              <button className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm">
-                + Add
-              </button>
-              <button className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm">
-                🗑 Delete
-              </button>
+              {user?.role === 'admin' && (
+                <>
+                  <button 
+                    onClick={handleAddTable}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
+                  >
+                    + Add
+                  </button>
+                  <button 
+                    onClick={handleDeleteTable}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
+                  >
+                    🗑 Delete
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -424,6 +513,94 @@ export default function TablesPage() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Table Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4">Add New Table</h2>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              Table name will be automatically generated (e.g., Table 1, Table 2, etc.)
+            </p>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Number of Seats</label>
+              <input
+                type="number"
+                value={newTableSeats}
+                onChange={(e) => setNewTableSeats(parseInt(e.target.value) || 2)}
+                min="1"
+                max="20"
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmAddTable}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Add Table
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Table Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4">Delete Table</h2>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">Select Table to Delete</label>
+              <select
+                value={selectedTableForDelete?.id || ''}
+                onChange={(e) => {
+                  const table = tables.find(t => t.id === e.target.value);
+                  setSelectedTableForDelete(table || null);
+                }}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="">Select a table...</option>
+                {tables.filter(t => t.status === 'free').map(table => (
+                  <option key={table.id} value={table.id}>
+                    {table.table_code} ({table.seats} seats)
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">Only free tables can be deleted</p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedTableForDelete(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteTable}
+                disabled={!selectedTableForDelete}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Delete Table
+              </button>
+            </div>
           </div>
         </div>
       )}

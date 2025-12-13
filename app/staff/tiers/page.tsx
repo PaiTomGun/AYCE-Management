@@ -95,6 +95,29 @@ export default function TiersPage() {
     }
   };
 
+  const toggleTierStatus = async (tier: Tier) => {
+    try {
+      const response = await fetch('/api/tiers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tierId: tier.id,
+          code: tier.code,
+          displayName: tier.display_name,
+          pricePerPerson: tier.price_per_person_baht,
+          priority: tier.priority,
+          isActive: !tier.is_active,
+        }),
+      });
+      
+      if (response.ok) {
+        fetchTiers();
+      }
+    } catch (error) {
+      console.error('Error toggling tier status:', error);
+    }
+  };
+
   const handleSaveTier = async () => {
     if (!tierCode || !tierName || !tierPrice) {
       alert('Please fill in all required fields');
@@ -173,7 +196,7 @@ export default function TiersPage() {
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-600">
+                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-600">
                       Actions
                     </th>
                   </tr>
@@ -186,29 +209,42 @@ export default function TiersPage() {
                       <td className="px-6 py-4">฿{tier.price_per_person_baht}</td>
                       <td className="px-6 py-4">{tier.priority}</td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        <button
+                          onClick={() => toggleTierStatus(tier)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                             tier.is_active
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
+                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                              : 'bg-red-100 text-red-700 hover:bg-red-200'
                           }`}
                         >
                           {tier.is_active ? 'Active' : 'Inactive'}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex gap-3 justify-center">
                           <button 
                             onClick={() => handleEditTier(tier)}
-                            className="text-blue-500 hover:text-blue-700 text-sm"
+                            className="group relative text-blue-500 hover:text-blue-700"
+                            title="Edit"
                           >
-                            Edit
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              Edit
+                            </span>
                           </button>
                           <button 
                             onClick={() => handleDeleteTier(tier.id)}
-                            className="text-red-500 hover:text-red-700 text-sm"
+                            className="group relative text-red-500 hover:text-red-700"
+                            title="Delete"
                           >
-                            Delete
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                              Delete
+                            </span>
                           </button>
                         </div>
                       </td>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createAccount, getAllAccounts, updateAccountStatus, deleteAccount } from '@/lib/auth';
+import { createAccount, getAllAccounts, updateAccountStatus, updateAccount, deleteAccount } from '@/lib/auth';
 import { getSession } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
@@ -62,6 +62,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, id: result.id });
   } catch (error) {
     console.error('Create account error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// Update account (admin only)
+export async function PUT(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get('session')?.value;
+    
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    const user = getSession(sessionId);
+    
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    
+    const { accountId, username, role } = await request.json();
+    
+    if (!accountId || !username || !role) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    
+    if (role !== 'staff' && role !== 'admin') {
+      return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
+    }
+    
+    const result = await updateAccount(accountId, username, role);
+    
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Update account error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -80,7 +80,7 @@ export async function getMenuItems(tierId?: string) {
       mc.position as category_position
     FROM menu_items mi
     LEFT JOIN menu_categories mc ON mi.category_id = mc.id
-    WHERE mi.is_deleted = false AND mi.is_available = true
+    WHERE mi.is_deleted = false
   `;
   
   const params: string[] = [];
