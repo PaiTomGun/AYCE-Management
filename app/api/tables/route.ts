@@ -95,6 +95,53 @@ export async function PUT(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const { tableId, seats } = await request.json();
+    
+    if (!tableId || !seats) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    if (seats < 1 || seats > 20) {
+      return NextResponse.json(
+        { error: 'Invalid number of seats (must be between 1 and 20)' },
+        { status: 400 }
+      );
+    }
+
+    // Check if table has active session
+    const activeSession = await query(
+      'SELECT id FROM sessions WHERE table_id = $1 AND ended_at IS NULL',
+      [tableId]
+    );
+
+    if (activeSession.length > 0) {
+      return NextResponse.json(
+        { error: 'Cannot edit table with active session' },
+        { status: 400 }
+      );
+    }
+
+    // Update the table
+    await query(
+      'UPDATE restaurant_tables SET seats = $1, updated_at = NOW() WHERE id = $2',
+      [seats, tableId]
+    );
+    
+    return NextResponse.json({ success: true, message: 'Table updated successfully' });
+  } catch (error) {
+    console.error('Update table error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { tableId } = await request.json();

@@ -43,8 +43,11 @@ export default function TablesPage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newTableSeats, setNewTableSeats] = useState(2);
   const [selectedTableForDelete, setSelectedTableForDelete] = useState<Table | null>(null);
+  const [selectedTableForEdit, setSelectedTableForEdit] = useState<Table | null>(null);
+  const [editTableSeats, setEditTableSeats] = useState(2);
   const router = useRouter();
 
   useEffect(() => {
@@ -333,6 +336,53 @@ export default function TablesPage() {
     }
   };
 
+  const handleEditTable = () => {
+    setShowEditModal(true);
+    setSelectedTableForEdit(null);
+    setEditTableSeats(2);
+  };
+
+  const confirmEditTable = async () => {
+    if (!selectedTableForEdit) {
+      alert('Please select a table to edit');
+      return;
+    }
+
+    if (editTableSeats < 1 || editTableSeats > 20) {
+      alert('Please enter a valid number of seats (1-20)');
+      return;
+    }
+
+    if (selectedTableForEdit.status === 'occupied') {
+      alert('Cannot edit an occupied table');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/tables', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableId: selectedTableForEdit.id,
+          seats: editTableSeats,
+        }),
+      });
+
+      if (response.ok) {
+        alert('Table updated successfully!');
+        setShowEditModal(false);
+        setSelectedTableForEdit(null);
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(`Failed to update table: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating table:', error);
+      alert('Error updating table');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -363,6 +413,12 @@ export default function TablesPage() {
                     className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600"
                   >
                     + Add
+                  </button>
+                  <button 
+                    onClick={handleEditTable}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600"
+                  >
+                    ✏️ Edit
                   </button>
                   <button 
                     onClick={handleDeleteTable}
@@ -604,6 +660,69 @@ export default function TablesPage() {
                 className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
               >
                 Add Table
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Table Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4">Edit Table</h2>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Select Table to Edit</label>
+              <select
+                value={selectedTableForEdit?.id || ''}
+                onChange={(e) => {
+                  const table = tables.find(t => t.id === e.target.value);
+                  setSelectedTableForEdit(table || null);
+                  setEditTableSeats(table?.seats || 2);
+                }}
+                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select a table...</option>
+                {tables.filter(t => t.status === 'free').map(table => (
+                  <option key={table.id} value={table.id}>
+                    {table.table_code} (Currently {table.seats} seats)
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-2">Only free tables can be edited</p>
+            </div>
+            
+            {selectedTableForEdit && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">Number of Seats</label>
+                <input
+                  type="number"
+                  value={editTableSeats}
+                  onChange={(e) => setEditTableSeats(parseInt(e.target.value) || 2)}
+                  min="1"
+                  max="20"
+                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setSelectedTableForEdit(null);
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmEditTable}
+                disabled={!selectedTableForEdit}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Update Table
               </button>
             </div>
           </div>
