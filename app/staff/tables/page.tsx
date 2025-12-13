@@ -189,6 +189,66 @@ export default function TablesPage() {
     return `${remaining} min`;
   };
 
+  const getTimePercentage = (startedAt: string, durationMinutes: number) => {
+    const start = new Date(startedAt);
+    const now = new Date();
+    const elapsedMinutes = Math.floor((now.getTime() - start.getTime()) / 1000 / 60);
+    const remaining = durationMinutes - elapsedMinutes;
+    const percentage = (remaining / durationMinutes) * 100;
+    return Math.max(0, Math.min(100, percentage));
+  };
+
+  const getTableColors = (table: Table) => {
+    if (table.status === 'free') {
+      return {
+        bg: 'bg-green-100',
+        border: 'border-green-500',
+        seat: 'bg-green-300',
+        text: 'text-green-700'
+      };
+    }
+
+    // Occupied table - calculate color based on remaining time
+    if (table.started_at && table.session_duration_minutes) {
+      const percentage = getTimePercentage(table.started_at, table.session_duration_minutes);
+      
+      // >= 30% remaining: pink (normal)
+      // 10-30% remaining: transition pink to orange
+      // < 10% remaining: red (urgent)
+      
+      if (percentage >= 30) {
+        return {
+          bg: 'bg-pink-100',
+          border: 'border-pink-500',
+          seat: 'bg-pink-300',
+          text: 'text-pink-700'
+        };
+      } else if (percentage >= 10) {
+        return {
+          bg: 'bg-orange-100',
+          border: 'border-orange-500',
+          seat: 'bg-orange-300',
+          text: 'text-orange-700'
+        };
+      } else {
+        return {
+          bg: 'bg-red-100',
+          border: 'border-red-500',
+          seat: 'bg-red-300',
+          text: 'text-red-700'
+        };
+      }
+    }
+
+    // Default occupied color
+    return {
+      bg: 'bg-pink-100',
+      border: 'border-pink-500',
+      seat: 'bg-pink-300',
+      text: 'text-pink-700'
+    };
+  };
+
   const parseLayout = (layout: string | undefined | null) => {
     if (!layout) return { x: 0, y: 0 };
     try {
@@ -320,14 +380,11 @@ export default function TablesPage() {
             <div className="grid grid-cols-3 gap-6">
               {tables.map((table) => {
                 const pos = parseLayout(table.layout);
+                const colors = getTableColors(table);
                 return (
                   <div
                     key={table.id}
-                    className={`rounded-lg p-4 cursor-pointer transition-all ${
-                      table.status === 'free'
-                        ? 'bg-green-100 border-2 border-green-500'
-                        : 'bg-pink-100 border-2 border-pink-500'
-                    }`}
+                    className={`rounded-lg p-4 cursor-pointer transition-all ${colors.bg} border-2 ${colors.border}`}
                     onClick={() => handleTableClick(table)}
                   >
                     <div className="flex items-center justify-between mb-2">
@@ -335,9 +392,7 @@ export default function TablesPage() {
                         {Array.from({ length: table.seats }).map((_, i) => (
                           <div
                             key={i}
-                            className={`w-6 h-6 rounded-sm ${
-                              table.status === 'free' ? 'bg-green-300' : 'bg-pink-300'
-                            }`}
+                            className={`w-6 h-6 rounded-sm ${colors.seat}`}
                           />
                         ))}
                       </div>
@@ -351,9 +406,7 @@ export default function TablesPage() {
                     </div>
 
                     <div className="text-center">
-                      <div className={`text-lg font-bold mb-1 ${
-                        table.status === 'free' ? 'text-green-700' : 'text-pink-700'
-                      }`}>
+                      <div className={`text-lg font-bold mb-1 ${colors.text}`}>
                         {table.table_code}
                       </div>
 
