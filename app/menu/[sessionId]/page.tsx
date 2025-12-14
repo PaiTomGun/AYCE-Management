@@ -555,28 +555,34 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
                   <img
                     src={item.image_base64 || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="24" fill="%239ca3af"%3E🍽️%3C/text%3E%3C/svg%3E'}
                     alt={item.name}
-                    className="w-20 h-20 rounded-lg object-cover"
+                    className={`w-20 h-20 rounded-lg object-cover ${!item.is_available ? 'opacity-50 grayscale' : ''}`}
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium mb-2">{item.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.name, -1)}
-                        disabled={getQuantity(item.id) === 0}
-                        className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center font-bold text-red-500">
-                        {getQuantity(item.id)}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.name, 1)}
-                        className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center hover:bg-red-50"
-                      >
-                        +
-                      </button>
-                    </div>
+                    <h3 className={`font-medium mb-2 ${!item.is_available ? 'text-gray-400' : ''}`}>{item.name}</h3>
+                    {!item.is_available ? (
+                      <div className="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm font-medium">
+                        Temporarily out of stock
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.name, -1)}
+                          disabled={getQuantity(item.id) === 0}
+                          className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-red-500">
+                          {getQuantity(item.id)}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.name, 1)}
+                          className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center hover:bg-red-50"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
