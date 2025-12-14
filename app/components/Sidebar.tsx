@@ -20,6 +20,7 @@ export default function Sidebar({ role = 'staff' }: SidebarProps) {
   const navItems: NavItem[] = [
     { href: '/staff/dashboard', label: 'Dashboard' },
     { href: '/staff/tables', label: 'Table Layout' },
+    { href: '/staff/orders', label: 'Upcoming Orders' },
   ];
 
   if (role === 'admin') {
