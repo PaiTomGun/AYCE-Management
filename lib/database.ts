@@ -213,8 +213,11 @@ export async function getSessionLogs(startDate?: Date, endDate?: Date) {
   }
   
   if (endDate) {
-    params.push(endDate);
-    sql += ` AND ended_at <= $${params.length}`;
+    // Add one day to include the entire end date
+    const endDateTime = new Date(endDate);
+    endDateTime.setDate(endDateTime.getDate() + 1);
+    params.push(endDateTime);
+    sql += ` AND started_at < $${params.length}`;
   }
   
   sql += ` ORDER BY started_at DESC`;

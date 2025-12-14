@@ -49,14 +49,16 @@ export async function GET(request: Request) {
     // Get top menu items from menu_item_logs
     let topItems = [];
     if (startDate && endDate) {
+      const endDateTime = new Date(endDate);
+      endDateTime.setDate(endDateTime.getDate() + 1);
       topItems = await query(
         `SELECT item_name, category_name, SUM(quantity) as total_quantity, COUNT(DISTINCT session_id) as order_count
          FROM menu_item_logs
-         WHERE ordered_at >= $1 AND ordered_at <= $2
+         WHERE ordered_at >= $1 AND ordered_at < $2
          GROUP BY item_name, category_name
          ORDER BY total_quantity DESC
          LIMIT 10`,
-        [startDate, endDate]
+        [startDate, endDateTime]
       );
     } else {
       topItems = await query(
