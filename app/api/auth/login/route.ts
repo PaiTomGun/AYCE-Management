@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const cookieStore = await cookies();
     cookieStore.set('session', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to false for local development over HTTP
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
     });
