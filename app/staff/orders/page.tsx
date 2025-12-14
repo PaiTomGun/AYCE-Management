@@ -24,12 +24,13 @@ interface Order {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState<'staff' | 'admin'>('staff');
+  const [userRole, setUserRole] = useState<'staff' | 'admin' | null>(null);
 
   useEffect(() => {
     const init = async () => {
       await fetchSession();
       await fetchOrders();
+      setLoading(false);
     };
     init();
     
@@ -43,10 +44,18 @@ export default function OrdersPage() {
       const response = await fetch('/api/auth/session');
       if (response.ok) {
         const data = await response.json();
-        setUserRole(data.role);
+        // Redirect admin users to dashboard as they shouldn't access orders page
+        if (data.user?.role === 'admin') {
+          window.location.href = '/staff/dashboard';
+          return;
+        }
+        setUserRole(data.user?.role || 'staff');
+      } else {
+        setUserRole('staff');
       }
     } catch (error) {
       console.error('Error fetching session:', error);
+      setUserRole('staff');
     }
   };
 
@@ -57,8 +66,6 @@ export default function OrdersPage() {
       setOrders(data);
     } catch (error) {
       console.error('Error fetching orders:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -97,17 +104,21 @@ export default function OrdersPage() {
     return `${diffMinutes} นาทีที่แล้ว`;
   };
 
+  if (loading || !userRole) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">กำลังโหลด...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar role={userRole} />
       <div className="flex-1">
         <TopBar title="Upcoming Orders" />
         <div className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-gray-500">กำลังโหลด...</div>
-            </div>
-          ) : orders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

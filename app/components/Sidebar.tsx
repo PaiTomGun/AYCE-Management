@@ -17,18 +17,21 @@ export default function Sidebar({ role = 'staff' }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const navItems: NavItem[] = [
-    { href: '/staff/dashboard', label: 'Dashboard' },
-    { href: '/staff/tables', label: 'Table Layout' },
-    { href: '/staff/orders', label: 'Upcoming Orders' },
-  ];
-
-  if (role === 'admin') {
-    navItems.push({ href: '/staff/menu', label: 'Menu Management' });
-    navItems.push({ href: '/staff/tiers', label: 'Tier Management' });
-    navItems.push({ href: '/staff/analytics', label: 'Analytics' });
-    navItems.push({ href: '/staff/accounts', label: 'Account Management' });
-  }
+  // Define navigation items based on role
+  const navItems: NavItem[] = role === 'admin' 
+    ? [
+        { href: '/staff/dashboard', label: 'Dashboard' },
+        { href: '/staff/tables', label: 'Table Layout' },
+        { href: '/staff/menu', label: 'Menu Management' },
+        { href: '/staff/tiers', label: 'Tier Management' },
+        { href: '/staff/analytics', label: 'Analytics' },
+        { href: '/staff/accounts', label: 'Account Management' },
+      ]
+    : [
+        { href: '/staff/dashboard', label: 'Dashboard' },
+        { href: '/staff/tables', label: 'Table Layout' },
+        { href: '/staff/orders', label: 'Upcoming Orders' },
+      ];
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
