@@ -79,6 +79,7 @@ export default function AnalyticsPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
                 className="px-4 py-2 border rounded-lg"
               />
               <span>to</span>
@@ -86,6 +87,7 @@ export default function AnalyticsPage() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                max={new Date().toISOString().split('T')[0]}
                 className="px-4 py-2 border rounded-lg"
               />
               <button className="p-2 hover:bg-gray-100 rounded-lg">
