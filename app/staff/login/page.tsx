@@ -95,15 +95,9 @@ export default function LoginPage() {
                 disabled={loading}
                 className="w-full bg-red-500 text-white py-3 rounded-lg font-bold hover:bg-red-600 transition-colors disabled:bg-gray-300"
               >
-                {loading ? 'กำลังเข้าสู่ระบบ...' : 'Login'}
+                {loading ? 'Try to login...' : 'Login'}
               </button>
             </form>
-
-            <div className="mt-4 text-center text-sm text-gray-500">
-              <p>Demo credentials:</p>
-              <p>Staff: staff / staff123</p>
-              <p>Admin: admin / admin123</p>
-            </div>
           </div>
         </div>
       </div>
