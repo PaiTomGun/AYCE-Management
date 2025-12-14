@@ -88,7 +88,7 @@ export default function OrdersPage() {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('th-TH', {
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -99,15 +99,15 @@ export default function OrdersPage() {
     const orderTime = new Date(dateString).getTime();
     const diffMinutes = Math.floor((now - orderTime) / 60000);
     
-    if (diffMinutes < 1) return 'เพิ่งสั่ง';
-    if (diffMinutes === 1) return '1 นาทีที่แล้ว';
-    return `${diffMinutes} นาทีที่แล้ว`;
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes === 1) return '1 minute ago';
+    return `${diffMinutes} minutes ago`;
   };
 
   if (loading || !userRole) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">กำลังโหลด...</div>
+        <div className="text-gray-500">Loading...</div>
       </div>
     );
   }
@@ -125,8 +125,8 @@ export default function OrdersPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-700 mb-2">ไม่มีออเดอร์ที่รอดำเนินการ</h3>
-              <p className="text-gray-500">ออเดอร์ใหม่จะแสดงที่นี่</p>
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No pending orders</h3>
+              <p className="text-gray-500">New orders will appear here</p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -164,12 +164,12 @@ export default function OrdersPage() {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      เสร็จสิ้น
+                      Complete
                     </button>
                   </div>
 
                   <div className="border-t pt-4">
-                    <h4 className="text-sm font-semibold text-gray-600 mb-3">รายการอาหาร:</h4>
+                    <h4 className="text-sm font-semibold text-gray-600 mb-3">Menu Items:</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {order.items && order.items.map((item) => (
                         <div
@@ -182,9 +182,9 @@ export default function OrdersPage() {
                       ))}
                     </div>
                     <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                      <span className="text-sm text-gray-600">รวมทั้งหมด:</span>
+                      <span className="text-sm text-gray-600">Total:</span>
                       <span className="text-lg font-bold text-red-600">
-                        {order.items ? order.items.reduce((sum, item) => sum + item.quantity, 0) : 0} รายการ
+                        {order.items ? order.items.reduce((sum, item) => sum + item.quantity, 0) : 0} items
                       </span>
                     </div>
                   </div>

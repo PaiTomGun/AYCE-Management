@@ -404,7 +404,7 @@ export default function TablesPage() {
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500">
                 Date: {new Date().toLocaleDateString('th-TH')} Time:{' '}
-                {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
               </span>
               {user?.role === 'admin' && (
                 <>
@@ -476,7 +476,7 @@ export default function TablesPage() {
                           </div>
                           <div className="text-gray-700">
                             <strong>Starting Time:</strong>{' '}
-                            {table.started_at && new Date(table.started_at).toLocaleTimeString('th-TH', {
+                            {table.started_at && new Date(table.started_at).toLocaleTimeString('en-US', {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}
@@ -799,7 +799,7 @@ export default function TablesPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Started:</span>
                 <span className="font-medium">
-                  {selectedTable.started_at && new Date(selectedTable.started_at).toLocaleTimeString('th-TH', {
+                  {selectedTable.started_at && new Date(selectedTable.started_at).toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit',
                   })}

@@ -28,37 +28,37 @@ INSERT INTO tiers (id, code, display_name, price_per_person_baht, priority, is_a
 
 -- Insert Menu Categories
 INSERT INTO menu_categories (id, name, position, created_at) VALUES
-('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'เนื้อสัตว์', 1, NOW()),
-('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'ของทะเล', 2, NOW()),
-('cccccccc-cccc-cccc-cccc-cccccccccccc', 'ผัก', 3, NOW()),
-('dddddddd-dddd-dddd-dddd-dddddddddddd', 'ของหวาน', 4, NOW());
+('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Meat', 1, NOW()),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Seafood', 2, NOW()),
+('cccccccc-cccc-cccc-cccc-cccccccccccc', 'Vegetables', 3, NOW()),
+('dddddddd-dddd-dddd-dddd-dddddddddddd', 'Desserts', 4, NOW());
 
 -- Insert Menu Items - Meat
 INSERT INTO menu_items (id, category_id, name, description, is_available, stock, created_at, updated_at) VALUES
-('10000000-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'หมูสามชั้น', 'หมูสามชั้นคุณภาพดี', true, 100, NOW(), NOW()),
-('10000000-0000-0000-0000-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'เนื้อวัว', 'เนื้อวัวชั้นดี', true, 80, NOW(), NOW()),
-('10000000-0000-0000-0000-000000000003', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'ไก่', 'เนื้อไก่สด', true, 100, NOW(), NOW()),
-('10000000-0000-0000-0000-000000000004', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'เนื้อแกะ', 'เนื้อแกะนุ่ม', true, 50, NOW(), NOW());
+('10000000-0000-0000-0000-000000000001', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Pork Belly', 'Premium quality pork belly slices', true, 100, NOW(), NOW()),
+('10000000-0000-0000-0000-000000000002', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Beef Slices', 'Premium marbled beef', true, 80, NOW(), NOW()),
+('10000000-0000-0000-0000-000000000003', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Chicken', 'Fresh chicken meat', true, 100, NOW(), NOW()),
+('10000000-0000-0000-0000-000000000004', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Lamb', 'Tender lamb meat', true, 50, NOW(), NOW());
 
 -- Insert Menu Items - Seafood
 INSERT INTO menu_items (id, category_id, name, description, is_available, stock, created_at, updated_at) VALUES
-('20000000-0000-0000-0000-000000000001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'กุ้ง', 'กุ้งสด', true, 100, NOW(), NOW()),
-('20000000-0000-0000-0000-000000000002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'หมึก', 'หมึกสด', true, 80, NOW(), NOW()),
-('20000000-0000-0000-0000-000000000003', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'ปลา', 'ปลาสด', true, 60, NOW(), NOW()),
-('20000000-0000-0000-0000-000000000004', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'หอยแมลงภู่', 'หอยแมลงภู่สด', true, 70, NOW(), NOW());
+('20000000-0000-0000-0000-000000000001', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Shrimp', 'Fresh prawns', true, 100, NOW(), NOW()),
+('20000000-0000-0000-0000-000000000002', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Squid', 'Fresh squid rings', true, 80, NOW(), NOW()),
+('20000000-0000-0000-0000-000000000003', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Fish Fillet', 'Fresh fish slices', true, 60, NOW(), NOW()),
+('20000000-0000-0000-0000-000000000004', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Mussels', 'Fresh green mussels', true, 70, NOW(), NOW());
 
 -- Insert Menu Items - Vegetables
 INSERT INTO menu_items (id, category_id, name, description, is_available, stock, created_at, updated_at) VALUES
-('30000000-0000-0000-0000-000000000001', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'ผักบุ้ง', 'ผักบุ้งสด', true, 100, NOW(), NOW()),
-('30000000-0000-0000-0000-000000000002', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'กะหล่ำปลี', 'กะหล่ำปลีสด', true, 100, NOW(), NOW()),
-('30000000-0000-0000-0000-000000000003', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'เห็ด', 'เห็ดหลากหลายชนิด', true, 100, NOW(), NOW()),
-('30000000-0000-0000-0000-000000000004', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'ข้าวโพด', 'ข้าวโพดหวาน', true, 80, NOW(), NOW());
+('30000000-0000-0000-0000-000000000001', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Morning Glory', 'Fresh water spinach', true, 100, NOW(), NOW()),
+('30000000-0000-0000-0000-000000000002', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Cabbage', 'Fresh cabbage', true, 100, NOW(), NOW()),
+('30000000-0000-0000-0000-000000000003', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Mushroom Mix', 'Assorted fresh mushrooms', true, 100, NOW(), NOW()),
+('30000000-0000-0000-0000-000000000004', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Sweet Corn', 'Fresh sweet corn', true, 80, NOW(), NOW());
 
 -- Insert Menu Items - Desserts
 INSERT INTO menu_items (id, category_id, name, description, is_available, stock, created_at, updated_at) VALUES
-('40000000-0000-0000-0000-000000000001', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'ไอศกรีม', 'ไอศกรีมหลากหลายรส', true, 200, NOW(), NOW()),
-('40000000-0000-0000-0000-000000000002', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'เค้ก', 'เค้กหลากหลายชนิด', true, 100, NOW(), NOW()),
-('40000000-0000-0000-0000-000000000003', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'ผลไม้', 'ผลไม้สด', true, 150, NOW(), NOW());
+('40000000-0000-0000-0000-000000000001', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Ice Cream', 'Assorted flavors', true, 200, NOW(), NOW()),
+('40000000-0000-0000-0000-000000000002', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Cake', 'Assorted cake slices', true, 100, NOW(), NOW()),
+('40000000-0000-0000-0000-000000000003', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Fresh Fruits', 'Seasonal fresh fruits', true, 150, NOW(), NOW());
 
 -- Link Menu Items to Tiers (Standard tier gets basic items)
 INSERT INTO menu_item_tiers (id, item_id, tier_id) 

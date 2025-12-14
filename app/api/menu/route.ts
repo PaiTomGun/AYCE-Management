@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     
     // Group by category
     const grouped = itemsWithTiers.reduce((acc: any, item: any) => {
-      const category = item.category_name || 'อื่นๆ';
+      const category = item.category_name || 'Others';
       if (!acc[category]) {
         acc[category] = [];
       }
