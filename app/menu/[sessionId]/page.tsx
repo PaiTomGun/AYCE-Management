@@ -49,7 +49,22 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
   const fetchSessionInfo = async () => {
     try {
       const response = await fetch(`/api/tables/session/${sessionId}`);
+      
+      if (response.status === 404) {
+        // Session not found or inactive
+        setSessionInfo({ error: 'not_found' });
+        setLoading(false);
+        return;
+      }
+      
       const data = await response.json();
+      
+      if (data.error) {
+        setSessionInfo({ error: data.error });
+        setLoading(false);
+        return;
+      }
+      
       setSessionInfo(data);
       // Fetch menu based on tier from customer_tiers (via session_tier_id)
       if (data.tier_id || data.session_tier_id) {
@@ -57,6 +72,8 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
       }
     } catch (error) {
       console.error('Error fetching session:', error);
+      setSessionInfo({ error: 'fetch_error' });
+      setLoading(false);
     }
   };
 
@@ -148,6 +165,31 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-gray-500">กำลังโหลด...</div>
+      </div>
+    );
+  }
+
+  // Check if session is inactive or not found
+  if (sessionInfo?.error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="w-20 h-20 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Session Ended</h1>
+            <p className="text-gray-600 mb-6">
+              เซสชันนี้ได้ทำการ Checkout เรียบร้อยแล้ว<br />
+              หรือไม่มีอยู่ในระบบ
+            </p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-gray-600">
+              <p>กรุณาติดต่อพนักงานเพื่อเริ่มเซสชันใหม่</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
