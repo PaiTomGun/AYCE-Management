@@ -171,13 +171,22 @@ export async function createSession(
       VALUES ($1, $2, $3, 'active', $4, $5, $6, $7)
     `, [sessionId, tableId, now, tierId, sessionDuration || 90, now, now]);
     
-    // Create session customers
+    // Create session customers with their tiers
     for (let i = 0; i < customerCount; i++) {
       const customerId = generateId();
+      const customerTierId = generateId();
+      
+      // Create session customer
       await client.query(`
         INSERT INTO session_customers (id, session_id, created_at)
         VALUES ($1, $2, $3)
       `, [customerId, sessionId, now]);
+      
+      // Assign tier to customer
+      await client.query(`
+        INSERT INTO customer_tiers (id, session_customer_id, tier_id, started_at)
+        VALUES ($1, $2, $3, $4)
+      `, [customerTierId, customerId, tierId, now]);
     }
     
     await client.query('COMMIT');

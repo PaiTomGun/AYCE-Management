@@ -11,6 +11,7 @@ export async function GET(
     const sessionData = await query(
       `SELECT s.*, 
               t.table_code,
+              tier.id as tier_id,
               tier.display_name as tier_name,
               tier.price_per_person_baht as tier_price,
               (SELECT COUNT(*) FROM session_customers WHERE session_id = s.id) as customer_count

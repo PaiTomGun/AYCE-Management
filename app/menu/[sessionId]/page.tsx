@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { CartItem } from '@/lib/types';
 
 export default function MenuPage({ params }: { params: Promise<{ sessionId: string }> }) {
@@ -13,51 +13,56 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
   const [loading, setLoading] = useState(true);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
   const [timeLeft, setTimeLeft] = useState('');
+  const [activeCategory, setActiveCategory] = useState<string>('ทั้งหมด');
+  const categoryRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   useEffect(() => {
-    fetchMenu();
     fetchSessionInfo();
-    const interval = setInterval(updateTimeLeft, 1000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!sessionInfo) return;
+    
+    // Initial update
+    const updateTime = () => {
+      if (!sessionInfo?.started_at || !sessionInfo?.session_duration_minutes) {
+        setTimeLeft('--:--');
+        return;
+      }
+      
+      const startTime = new Date(sessionInfo.started_at).getTime();
+      const duration = sessionInfo.session_duration_minutes * 60 * 1000;
+      const endTime = startTime + duration;
+      const now = Date.now();
+      const remaining = Math.max(0, endTime - now);
+      
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+    };
+    
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, [sessionInfo]);
 
   const fetchSessionInfo = async () => {
     try {
       const response = await fetch(`/api/tables/session/${sessionId}`);
       const data = await response.json();
       setSessionInfo(data);
-      updateTimeLeft();
+      // Fetch menu based on tier from customer_tiers (via session_tier_id)
+      if (data.tier_id || data.session_tier_id) {
+        fetchMenu(data.tier_id || data.session_tier_id);
+      }
     } catch (error) {
       console.error('Error fetching session:', error);
     }
   };
 
-  const updateTimeLeft = () => {
-    if (!sessionInfo?.started_at || !sessionInfo?.session_duration_minutes) {
-      setTimeLeft('--:--');
-      return;
-    }
-    
-    const startTime = new Date(sessionInfo.started_at).getTime();
-    const duration = sessionInfo.session_duration_minutes * 60 * 1000;
-    const endTime = startTime + duration;
-    const now = Date.now();
-    const remaining = Math.max(0, endTime - now);
-    
-    const minutes = Math.floor(remaining / 60000);
-    const seconds = Math.floor((remaining % 60000) / 1000);
-    setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-  };
-
-  useEffect(() => {
-    if (sessionInfo) {
-      updateTimeLeft();
-    }
-  }, [sessionInfo]);
-
-  const fetchMenu = async () => {
+  const fetchMenu = async (tierId: string) => {
     try {
-      const response = await fetch('/api/menu');
+      const response = await fetch(`/api/menu?tierId=${tierId}`);
       const data = await response.json();
       setMenu(data);
     } catch (error) {
@@ -122,12 +127,22 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
     }
   };
 
-  const categories = [
-    { id: 'all', name: 'ทั้งหมด' },
-    { id: 'meat', name: 'เนื้อสัตว์' },
-    { id: 'seafood', name: 'ของทะเล' },
-    { id: 'veg', name: 'ผัก' },
-  ];
+  const categories = ['ทั้งหมด', ...Object.keys(menu)];
+
+  const scrollToCategory = (category: string) => {
+    setActiveCategory(category);
+    if (category === 'ทั้งหมด') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      const element = categoryRefs.current[category];
+      if (element) {
+        const offset = 180; // Header height + category tabs height
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - offset;
+        window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -157,52 +172,55 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
       <div className="min-h-screen bg-red-500 text-white">
         <div className="max-w-md mx-auto p-4">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold">Order</h1>
-            <button className="text-white">
+            <h1 className="text-2xl font-bold">ยืนยันรายการ</h1>
+            <button 
+              onClick={() => setShowOrder(false)}
+              className="text-white hover:text-red-100"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           <div className="bg-white text-black rounded-lg p-4 mb-4">
-            <p className="text-sm text-gray-500 mb-4">โต๊ะที่: 1 - 4</p>
+            <div className="flex justify-between items-center mb-4 pb-3 border-b">
+              <div>
+                <p className="text-sm text-gray-500">โต๊ะ</p>
+                <p className="font-bold text-lg">{sessionInfo?.table_code || 'Loading...'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Tier</p>
+                <p className="font-bold text-red-500">{sessionInfo?.tier_name || '-'}</p>
+              </div>
+            </div>
             <div className="space-y-2 mb-4">
               {cart.map((item) => (
                 <div key={item.id} className="flex justify-between text-sm">
-                  <span>{item.name}</span>
-                  <span>x {item.quantity}</span>
+                  <span className="flex-1">{item.name}</span>
+                  <span className="font-medium">x {item.quantity}</span>
                 </div>
               ))}
             </div>
-            <div className="border-t pt-2">
-              <div className="flex justify-between font-bold">
-                <span>Total:</span>
-                <span>{getTotalItems()}</span>
+            <div className="border-t pt-3">
+              <div className="flex justify-between font-bold text-lg">
+                <span>ทั้งหมด:</span>
+                <span className="text-red-500">{getTotalItems()} รายการ</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={confirmOrder}
-            className="w-full bg-white text-red-500 rounded-full py-3 font-bold mb-2"
+            className="w-full bg-white text-red-500 rounded-full py-4 font-bold mb-3 hover:bg-red-50 text-lg"
           >
-            ส่งรายการ
+            ✓ ยืนยันสั่งอาหาร
           </button>
           <button
             onClick={() => setShowOrder(false)}
-            className="w-full bg-red-600 text-white rounded-full py-3 font-bold"
+            className="w-full bg-red-600 text-white rounded-full py-3 font-bold hover:bg-red-700"
           >
-            ส้งอาหารเพิ่ม
-          </button>
-
-          <button className="fixed bottom-4 right-4 bg-white text-red-500 rounded-full p-3 shadow-lg">
-            <div className="flex items-center gap-1">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="text-xs">CALL</span>
-            </div>
+            ← กลับไปเลือกเพิ่ม
           </button>
         </div>
       </div>
@@ -210,9 +228,78 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
+    <>
+      {/* Basket Modal */}
+      {showCart && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-end">
+          <div className="bg-white w-full max-w-md mx-auto rounded-t-3xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">ตะกร้า</h2>
+              <button
+                onClick={() => setShowCart(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {cart.length === 0 ? (
+                <div className="text-center py-12 text-gray-400">
+                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <p>ตะกร้าว่างเปล่า</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cart.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <div className="flex-1">
+                        <h3 className="font-medium">{item.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.name, -1)}
+                          className="w-8 h-8 rounded-full bg-white border-2 border-red-500 text-red-500 flex items-center justify-center hover:bg-red-50"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-bold text-red-500">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.name, 1)}
+                          className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-4 border-t bg-white">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg font-bold">ทั้งหมด</span>
+                <span className="text-2xl font-bold text-red-500">{getTotalItems()} รายการ</span>
+              </div>
+              <button
+                onClick={() => setShowCart(false)}
+                className="w-full bg-red-500 text-white rounded-full py-3 font-bold hover:bg-red-600"
+              >
+                เสร็จสิ้น
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen bg-white">
+        <div className="max-w-md mx-auto">
+          {/* Header */}
         <div className="bg-white p-4 border-b sticky top-0 z-10">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -258,13 +345,18 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-2 p-4 overflow-x-auto">
+        <div className="flex gap-2 p-4 overflow-x-auto sticky top-[140px] bg-white z-10 border-b">
           {categories.map((cat) => (
             <button
-              key={cat.id}
-              className="px-4 py-2 rounded-full bg-red-500 text-white text-sm whitespace-nowrap"
+              key={cat}
+              onClick={() => scrollToCategory(cat)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                activeCategory === cat
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
             >
-              {cat.name}
+              {cat}
             </button>
           ))}
         </div>
@@ -272,7 +364,12 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
         {/* Menu Items */}
         <div className="p-4 pb-24">
           {Object.entries(menu).map(([category, items]: [string, any]) => (
-            <div key={category} className="mb-6">
+            <div 
+              key={category} 
+              className="mb-6"
+              ref={(el) => { categoryRefs.current[category] = el; }}
+            >
+              <h2 className="text-xl font-bold mb-4 text-gray-800">{category}</h2>
               {(items as any[]).map((item) => (
                 <div key={item.id} className="flex gap-3 mb-4 pb-4 border-b">
                   <img
@@ -339,5 +436,6 @@ export default function MenuPage({ params }: { params: Promise<{ sessionId: stri
         </div>
       </div>
     </div>
+    </>
   );
 }
